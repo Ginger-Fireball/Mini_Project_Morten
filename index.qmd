@@ -11,8 +11,8 @@ filters:
   - Erasmus-CTM/pyodide-interaktiv
 ---
 
-
-
+ffaf
+kdkS
 
 ```{pyodide-python}
 #|code-fold: true
