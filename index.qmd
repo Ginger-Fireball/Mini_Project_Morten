@@ -11,9 +11,9 @@ filters:
   - Erasmus-CTM/pyodide-interaktiv
 ---
 
-
-
-
+fjfj
+ok
+wtf
 ```{pyodide-python}
 #|code-fold: true
 #| autorun: true
