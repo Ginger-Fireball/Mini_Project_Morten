@@ -42,7 +42,7 @@ img2 = np.array([
 ```
 
 ## How an SVD works
-Belwo is a simple example of how an SVD of the matrix $A$ would look like 
+Below is a simple example of how an SVD of the matrix $A$ would look like 
 $$
 A = \begin{bmatrix}
 1 & 0 \\
@@ -93,11 +93,11 @@ matrices whose dimensions allow them to be multiplied back together to
 reconstruct $A$. 
 
 ## The Low-Rank Approximation Problem
-Now that we have seen the full SVD, we can explore what happens when we truncate it. This leads to a fundamental question known as the low-rank approximation problem: for a given rank $k$, how do we find a simpler matrix $A_k$ that is as close as possible to our original matrix $A$?
-\\
-The Eckart–Young–Mirsky theorem provides the mathematical answer, the optimal rank-$k$ approximation is obtained simply by keeping the $k$ largest singular values and their corresponding singular vectors, while discarding the rest.
-### Rank 1 example
+Now that we have seen the full SVD, we can explore what happens when we truncate it. This leads to a fundamental question known as the low-rank approximation problem: for a given rank $k$, how do we find a simpler matrix $A_k$ that is as close as possible to our original matrix $A$?  
 
+The Eckart–Young–Mirsky theorem provides the mathematical answer, the optimal rank-$k$ approximation is obtained simply by keeping the $k$ largest singular values and their corresponding singular vectors, while discarding the rest.
+
+### Rank 1 example
 Continuing from the SVD in @eq-svd-matrix, if we set the rank to $k = 1$, we keep only the first column of $U$, the first singular value of $\Sigma$, and the first row of $V^T$ giving us
 $$
 \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}
@@ -107,7 +107,7 @@ $$
 \begin{bmatrix} 0 & 1 \end{bmatrix}=
 \begin{bmatrix} 0 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}
 $$
-This rank-1 matrix retains the same $3 \times 2$ dimensions, but it only captures the most dominant feature (the largest value, $2$) while omitting secondary details.
+This rank-1 matrix retains the same $3 \times 2$ dimensions, but it only captures the most dominant feature (the largest value, $2$) while omitting the rest.
 
 ### Rank 2 example
 If we set $k = 2$, we include the second singular component giving us 
@@ -117,43 +117,43 @@ $$
   \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}
    = \begin{bmatrix} 1 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}
 $$
-Notice that the result is the exact original matrix $A$. Because $A$ is a $3 \times 2$ matrix, and as the maximum possible rank is $2$. $k = 2$ represents a full-rank reconstruction, meaning 100% of the original information is recovered.
+Notice that the result is the exact original matrix $A$. Because $A$ is a $3 \times 2$ matrix, and as the maximum possible rank is $2$. The $k = 2$ represents a full-rank reconstruction, meaning 100% of the original information is recovered.
 
-Below is a large version of this excact example, where you can play around with the rank.
+Below is a larger version of this exact example, where you can play around with the rank.
 ```{pyodide-python}
 
 (U, S, V) = linalg.svd(img)
-#Ths runs a a SVD on the img given above splitting it in ot 3 parts the
-# U complex unitary matrix, which is an invertible complex square matrix, where its invers equals its conjugate transpose,
-# S is a rectangular diagonal matrix with non-negative real numbers on the diagonal.
-# V is also a complex unitary matrix.
+# This runs an SVD on the img, splitting it into 3 parts:
+# U: a unitary matrix (a complex square matrix whose inverse equals its conjugate transpose).
+# S: a rectangular diagonal matrix with non-negative real numbers on the diagonal.
+# V: also a unitary matrix.
 
 
-ranks = [27, 25, 20, 15, 10, 5, 4, 3, 2, 1]
-#These are the ranks chosen to recreate the image, going from 27-1. 
+ranks = [27, 25, 20, 15, 10, 5, 4, 3, 2, 1] 
+# These are the ranks chosen to recreate the image, going from 27 down to 1.
 fig, ax = plt.subplots()
-#Creates the canvas and the ploting area.
+# Creates the canvas and plotting area.
 im = ax.imshow(img)
-#draws the uncompressed image img, and saves it in im.
+# Draws the uncompressed image (img) and saves the plot object in im.
 title = ax.set_title(f"Rank {ranks[0]}")
-#Sets the starting title text, using ranks[0], making th title Rank 27.
+# Sets the starting title text using ranks[0], making the title "Rank 27".
 def update(frame):
-    #creates the function
+    # Function to update the plot for each animation frame.
     rank = ranks[frame]
-    #Translates the frame number into the actual rank
+    # Translates the frame number into the actual rank.
     imgCompressed = U[:, 0:rank] @ np.diag(S[0:rank]) @ V[0:rank, :]
-    #The actual SVD reconstruction math explained above.
+    # The actual SVD reconstruction math explained above.
     im.set_data(imgCompressed)
-    #it takes the changes the photo when you move the slider, by saving the new image.
+    # Updates the displayed image with the newly compressed image data.
     title.set_text(f"Rank {rank}")
-    #updates the existing title object's text in place
+    # Updates the existing title object's text in place.
     return im, title
-    #Hands back the two objects that changed this frame
+    # Hands back the two objects that changed in this frame.
 
 ani = animation.FuncAnimation(fig, update, frames=len(ranks), interval=800, blit=False)
-#builds and starts the animation
+# Builds and starts the animation.
 plt.show()
-#displays the figure 
+# Displays the figure.
 ```
 For large images (which contain thousands of rows and columns), setting $k$ much smaller than the full rank allows us to recreate a recognizable image using only a fraction of the data. This idea is hopefully seen in these exampels.
 
