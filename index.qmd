@@ -2,7 +2,7 @@
 title: "Mortens Mini Project"
 format: 
     html:
-        embed-resources: true
+        html-math-method: katex
 pyodide:
   packages:
     - numpy
@@ -10,10 +10,11 @@ pyodide:
 filters:
   - Erasmus-CTM/pyodide-interaktiv
 ---
+# Quarto Presentation
+This project explores how Singular Value Decomposition (SVD) can be used to represent and compress images. Although modern image compression such as jpeg rely on the Discrete Cosine Transform (DCT), as calculating SVD's becomes computationally expensive for large datastructures, SVD's remains as a good foundational concept for understanding image processing. Therefore, this presentation will give a introduction to the mathematics of image representation.
 
-
-
-
+## Starting point
+Below, you'll find two collapsed code blocks containing the pre-loaded packages and the raw data. Feel free to expand them if you want to inspect what is loaded. The raw data consists of pixel values ranging from $[0-15]$, representing a grayscale image.
 ```{pyodide-python}
 #|code-fold: true
 #| autorun: true
@@ -25,7 +26,7 @@ import matplotlib.colors
 import matplotlib.animation as animation
 
 ```
-# Hello
+
 
 ```{pyodide-python}
 #|code-fold: true
@@ -40,35 +41,125 @@ img2 = np.array([
 
 ```
 
-$m_2^2=2^{\sqrt+\Omega}$
+## How an SVD works
+Belwo is a simple example of how an SVD of the matrix $A$ would look like 
+$$
+A = \begin{bmatrix}
+1 & 0 \\
+0 & 2 \\
+0 & 0
+\end{bmatrix}
+\in \mathbb{R}^{3 \times 2}
+$$
 
+The Singular Value Decomposition (SVD) of $A$ is given by
 
+$$
+A = U \Sigma V^T
+$$
+
+where
+
+$$
+U\Sigma V^T =
+\begin{bmatrix}
+0 & 1 & 0 \\
+1 & 0 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+2 & 0 \\
+0 & 1 \\
+0 & 0
+\end{bmatrix}
+\begin{bmatrix}
+0 & 1 \\
+1 & 0
+\end{bmatrix}
+$$ {#eq-svd-matrix}
+
+The dimensions of the matrices are therefore
+
+$$
+\underbrace{(3 \times 3)}_{U}
+\underbrace{(3 \times 2)}_{\Sigma}
+\underbrace{(2 \times 2)}_{V^T}
+=
+(3 \times 2).
+$$
+
+Thus, the SVD decomposes the original $3 \times 2$ matrix into three
+matrices whose dimensions allow them to be multiplied back together to
+reconstruct $A$. 
+
+## The Low-Rank Approximation Problem
+Now that we have seen the full SVD, we can explore what happens when we truncate it. This leads to a fundamental question known as the low-rank approximation problem: for a given rank $k$, how do we find a simpler matrix $A_k$ that is as close as possible to our original matrix $A$?
+\\
+The Eckart–Young–Mirsky theorem provides the mathematical answer, the optimal rank-$k$ approximation is obtained simply by keeping the $k$ largest singular values and their corresponding singular vectors, while discarding the rest.
+### Rank 1 example
+
+Continuing from the SVD in @eq-svd-matrix, if we set the rank to $k = 1$, we keep only the first column of $U$, the first singular value of $\Sigma$, and the first row of $V^T$ giving us
+$$
+\begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}
+\begin{bmatrix} 2 \end{bmatrix}
+\begin{bmatrix} 0 & 1 \end{bmatrix}= 2*
+\begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}
+\begin{bmatrix} 0 & 1 \end{bmatrix}=
+\begin{bmatrix} 0 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}
+$$
+This rank-1 matrix retains the same $3 \times 2$ dimensions, but it only captures the most dominant feature (the largest value, $2$) while omitting secondary details.
+
+### Rank 2 example
+If we set $k = 2$, we include the second singular component giving us 
+$$
+\begin{bmatrix} 0 & 1 \\ 1 & 0 \\ 0 & 0 \end{bmatrix}
+ \begin{bmatrix} 2 & 0 \\ 0 & 1 \end{bmatrix}
+  \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}
+   = \begin{bmatrix} 1 & 0 \\ 0 & 2 \\ 0 & 0 \end{bmatrix}
+$$
+Notice that the result is the exact original matrix $A$. Because $A$ is a $3 \times 2$ matrix, and as the maximum possible rank is $2$. $k = 2$ represents a full-rank reconstruction, meaning 100% of the original information is recovered.
+
+Below is a large version of this excact example, where you can play around with the rank.
 ```{pyodide-python}
 
 (U, S, V) = linalg.svd(img)
-#Ths runs a a SVD on the img given above splitting it inot 3 parts the U complex unitary matrix, which is an invertible complex square matrix, where its invers equals its conjugate transpose, S is a rectangular diagonal matrix with non-negative real numbers on the diagonal.
+#Ths runs a a SVD on the img given above splitting it in ot 3 parts the
+# U complex unitary matrix, which is an invertible complex square matrix, where its invers equals its conjugate transpose,
+# S is a rectangular diagonal matrix with non-negative real numbers on the diagonal.
+# V is also a complex unitary matrix.
+
 
 ranks = [27, 25, 20, 15, 10, 5, 4, 3, 2, 1]
-
+#These are the ranks chosen to recreate the image, going from 27-1. 
 fig, ax = plt.subplots()
+#Creates the canvas and the ploting area.
 im = ax.imshow(img)
+#draws the uncompressed image img, and saves it in im.
 title = ax.set_title(f"Rank {ranks[0]}")
-
+#Sets the starting title text, using ranks[0], making th title Rank 27.
 def update(frame):
+    #creates the function
     rank = ranks[frame]
+    #Translates the frame number into the actual rank
     imgCompressed = U[:, 0:rank] @ np.diag(S[0:rank]) @ V[0:rank, :]
+    #The actual SVD reconstruction math explained above.
     im.set_data(imgCompressed)
+    #it takes the changes the photo when you move the slider, by saving the new image.
     title.set_text(f"Rank {rank}")
+    #updates the existing title object's text in place
     return im, title
+    #Hands back the two objects that changed this frame
 
 ani = animation.FuncAnimation(fig, update, frames=len(ranks), interval=800, blit=False)
+#builds and starts the animation
 plt.show()
+#displays the figure 
 ```
-
+For large images (which contain thousands of rows and columns), setting $k$ much smaller than the full rank allows us to recreate a recognizable image using only a fraction of the data. This idea is hopefully seen in these exampels.
 
 ```{pyodide-python}
 (U, S, V) = linalg.svd(img2)
-#Ths runs a a SVD on the img given above splitting it inot 3 parts the U complex unitary matrix, which is an invertible complex square matrix, where its invers equals its conjugate transpose, S is a rectangular diagonal matrix with non-negative real numbers on the diagonal.
+
 
 ranks = [27, 25, 20, 15, 10, 5, 4, 3, 2, 1]
 
